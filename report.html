@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AFIT MCT 425: Embedded System Analysis - Coffee Maker</title>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Open+Sans:wght@400;600&family=Fira+Code&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --afit-blue: #002147;
+            --gold: #C5A017;
+            --dark: #1a1a1a;
+            --light: #555;
+            --bg: #f4f4f4;
+        }
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+
+            .page {
+                width: 210mm;
+                height: 297mm;
+                max-height: 297mm;
+                overflow: hidden;
+                box-shadow: none !important;
+                margin: 0 !important;
+                border: none !important;
+                border-top: none !important;
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+
+            .page:last-child {
+                page-break-after: auto;
+            }
+
+            .fig-box,
+            .code,
+            .callout,
+            table {
+                page-break-inside: avoid;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.7;
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .page {
+            width: 210mm;
+            height: 297mm;
+            max-height: 297mm;
+            overflow: hidden;
+            background: white;
+            padding: 15mm 18mm 20mm 18mm;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            border-top: 5px solid var(--afit-blue);
+        }
+
+        .page::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200mm;
+            height: 200mm;
+            background-image: url('afit_logo.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .page>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Merriweather', serif;
+            color: var(--afit-blue);
+        }
+
+        h2 {
+            border-bottom: 3px solid var(--gold);
+            padding-bottom: 8px;
+            margin-top: 0;
+        }
+
+        p {
+            text-align: justify;
+            font-size: 11pt;
+        }
+
+        .page-num {
+            position: absolute;
+            bottom: 15mm;
+            width: calc(100% - 40mm);
+            text-align: center;
+            font-size: 10pt;
+            color: #999;
+        }
+
+        .cover {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: calc(297mm - 40mm);
+            text-align: center;
+        }
+
+        .cover-header {
+            border-bottom: 2px solid var(--afit-blue);
+            padding-bottom: 15px;
+        }
+
+        .school-name {
+            font-family: 'Merriweather', serif;
+            font-size: 20pt;
+            font-weight: 900;
+            color: var(--afit-blue);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .dept-name {
+            font-size: 12pt;
+            color: var(--light);
+            margin-top: 5px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 10pt;
+        }
+
+        th {
+            background: var(--afit-blue);
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        tr:hover {
+            background: #f0f7ff;
+        }
+
+        .fig-box {
+            background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #e8f4fd 0%, #d0e8f8 100%);
+            border-left: 4px solid var(--afit-blue);
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff8e6 0%, #ffefcc 100%);
+            border-left: 4px solid var(--gold);
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--gold);
+            border-radius: 50%;
+            margin-right: 12px;
+            vertical-align: middle;
+        }
+
+        .caption {
+            font-size: 9pt;
+            color: var(--light);
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .eq-box {
+            background: #f8f8f8;
+            border-left: 4px solid var(--gold);
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .code {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Fira Code', monospace;
+            font-size: 9pt;
+            white-space: pre-wrap;
+            margin: 15px 0;
+        }
+
+        .callout {
+            background: rgba(0, 33, 71, 0.05);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .toc-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dotted #ccc;
+            padding: 5px 0;
+        }
+
+        ul,
+        ol {
+            margin-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+            font-size: 11pt;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- COVER PAGE -->
+    <div class="page">
+        <div class="cover">
+            <div class="cover-header">
+                <div class="school-name">Air Force Institute of Technology</div>
+                <div class="dept-name">Department of Mechatronics Engineering</div>
+            </div>
+            <div>
+                <div style="color: var(--gold); font-weight: bold; letter-spacing: 1px; margin-bottom: 10px;">MCT 425:
+                    EMBEDDED SYSTEMS DESIGN</div>
+                <h1 style="font-size: 26pt; line-height: 1.3; margin: 0;">The Embedded System<br>in a Coffee
+                    Maker:<br>Principles of Operation</h1>
+                <div style="width: 80px; height: 4px; background: var(--gold); margin: 20px auto;"></div>
+
+                <!-- Decorative MCU Icon -->
+                <svg width="120" height="80" viewBox="0 0 120 80" style="margin: 15px auto; display: block;">
+                    <rect x="30" y="15" width="60" height="50" rx="5" fill="#002147" stroke="#C5A017"
+                        stroke-width="2" />
+                    <circle cx="45" cy="35" r="4" fill="#C5A017" />
+                    <circle cx="60" cy="35" r="4" fill="#C5A017" />
+                    <circle cx="75" cy="35" r="4" fill="#C5A017" />
+                    <rect x="45" y="45" width="30" height="10" rx="2" fill="#C5A017" opacity="0.7" />
+                    <!-- Pins -->
+                    <line x1="35" y1="5" x2="35" y2="15" stroke="#555" stroke-width="3" />
+                    <line x1="50" y1="5" x2="50" y2="15" stroke="#555" stroke-width="3" />
+                    <line x1="70" y1="5" x2="70" y2="15" stroke="#555" stroke-width="3" />
+                    <line x1="85" y1="5" x2="85" y2="15" stroke="#555" stroke-width="3" />
+                    <line x1="35" y1="65" x2="35" y2="75" stroke="#555" stroke-width="3" />
+                    <line x1="50" y1="65" x2="50" y2="75" stroke="#555" stroke-width="3" />
+                    <line x1="70" y1="65" x2="70" y2="75" stroke="#555" stroke-width="3" />
+                    <line x1="85" y1="65" x2="85" y2="75" stroke="#555" stroke-width="3" />
+                    <line x1="20" y1="30" x2="30" y2="30" stroke="#555" stroke-width="3" />
+                    <line x1="20" y1="50" x2="30" y2="50" stroke="#555" stroke-width="3" />
+                    <line x1="90" y1="30" x2="100" y2="30" stroke="#555" stroke-width="3" />
+                    <line x1="90" y1="50" x2="100" y2="50" stroke="#555" stroke-width="3" />
+                </svg>
+
+                <p style="color: var(--light); max-width: 500px; margin: 0 auto; text-align: center; font-size: 10pt;">
+                    An analysis of the microcontroller architecture, firmware design, control algorithms, and real-time
+                    I/O management in modern espresso machines.
+                </p>
+            </div>
+            <div>
+                <table style="width: 70%; margin: 0 auto;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:center;">Matric No.</th>
+                            <th style="text-align:center;">Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="text-align:center;">U22MTE1001</td>
+                            <td style="text-align:center;">ABAAGU, Paula Kaun Doowuese</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:center;">U22MTE1002</td>
+                            <td style="text-align:center;">ABDULAZEEZ, Mansur Ebije</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:center;">U22MTE1003</td>
+                            <td style="text-align:center;">ABDULFATAH, Abubakar</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:center;">U22MTE1004</td>
+                            <td style="text-align:center;">ABDULKADIR, Aliyu Gumi</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:center;">U22MTE1005</td>
+                            <td style="text-align:center;">ABDULKADIR, Muhammed Tahir</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="margin-top: 30px; color: #888; font-size: 10pt;"><strong>Academic Session:</strong>
+                    2025/2026</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLE OF CONTENTS -->
+    <div class="page">
+        <h2>Table of Contents</h2>
+        <div style="margin-top: 20px;">
+            <div class="toc-row"><span>1. Abstract</span><span>3</span></div>
+            <div class="toc-row"><span>2. Introduction to Embedded Systems</span><span>3</span></div>
+            <div class="toc-row"><span>&nbsp;&nbsp;&nbsp;&nbsp;2.2 Why Embedded Systems?</span><span>4</span></div>
+            <div class="toc-row"><span>3. The Embedded System Architecture</span><span>5</span></div>
+            <div class="toc-row"><span>&nbsp;&nbsp;&nbsp;&nbsp;3.1 Microcontroller Selection</span><span>5</span></div>
+            <div class="toc-row"><span>&nbsp;&nbsp;&nbsp;&nbsp;3.2 Memory Organization</span><span>6</span></div>
+            <div class="toc-row"><span>&nbsp;&nbsp;&nbsp;&nbsp;3.3 Peripheral Interfaces</span><span>6</span></div>
+            <div class="toc-row"><span>4. Firmware Design</span><span>7</span></div>
+            <div class="toc-row"><span>&nbsp;&nbsp;&nbsp;&nbsp;4.1 Finite State Machine</span><span>7</span></div>
+            <div class="toc-row"><span>&nbsp;&nbsp;&nbsp;&nbsp;4.2 Interrupt Handling</span><span>8</span></div>
+            <div class="toc-row"><span>&nbsp;&nbsp;&nbsp;&nbsp;4.3 Timer Management</span><span>8</span></div>
+            <div class="toc-row"><span>5. Control Algorithms</span><span>9</span></div>
+            <div class="toc-row"><span>&nbsp;&nbsp;&nbsp;&nbsp;5.1 PID Temperature Control</span><span>9</span></div>
+            <div class="toc-row"><span>&nbsp;&nbsp;&nbsp;&nbsp;5.2 Volumetric Dispensing</span><span>10</span></div>
+            <div class="toc-row"><span>6. I/O Interfacing</span><span>11</span></div>
+            <div class="toc-row"><span>&nbsp;&nbsp;&nbsp;&nbsp;6.1 Analog Input (ADC)</span><span>11</span></div>
+            <div class="toc-row"><span>&nbsp;&nbsp;&nbsp;&nbsp;6.2 Digital Output (GPIO/PWM)</span><span>11</span></div>
+            <div class="toc-row"><span>7. Real-Time Constraints</span><span>12</span></div>
+            <div class="toc-row"><span>8. Safety & Watchdog Mechanisms</span><span>13</span></div>
+            <div class="toc-row"><span>9. Conclusion</span><span>14</span></div>
+            <div class="toc-row"><span>10. References</span><span>15</span></div>
+        </div>
+    </div>
+
+    <!-- PAGE 3: ABSTRACT & INTRO -->
+    <div class="page">
+        <h2>1. Abstract</h2>
+        <div class="callout">
+            <p>This report analyzes the <strong>embedded system</strong> at the heart of a modern coffee maker. Rather
+                than focusing on the mechanical or thermal components, this study examines the <strong>microcontroller
+                    unit (MCU)</strong>, its <strong>firmware architecture</strong>, <strong>control
+                    algorithms</strong>, and <strong>real-time I/O management</strong>. The goal is to understand how a
+                small, resource-constrained processor transforms raw sensor data into precise actuation commands,
+                ensuring consistent coffee extraction through intelligent closed-loop control.</p>
+        </div>
+
+        <h2>2. Introduction to Embedded Systems</h2>
+        <h3>2.1 Definition</h3>
+        <p>An <strong>embedded system</strong> is a dedicated computer system designed to perform specific tasks within
+            a larger mechanical or electrical system. Unlike general-purpose computers, embedded systems are
+            characterized by:</p>
+        <ul>
+            <li><strong>Dedicated Function:</strong> Programmed for one task (e.g., temperature regulation).</li>
+            <li><strong>Real-Time Operation:</strong> Must respond to inputs within strict time constraints
+                (milliseconds).</li>
+            <li><strong>Resource Constraints:</strong> Limited memory (kilobytes), low power consumption.</li>
+            <li><strong>High Reliability:</strong> Expected to run continuously for years without failure.</li>
+        </ul>
+        <div class="page-num">Page 3</div>
+    </div>
+
+    <!-- PAGE 4: WHY EMBEDDED -->
+    <div class="page">
+        <h3>2.2 Why Embedded Systems for Coffee Makers?</h3>
+        <p>A traditional thermostat (bimetallic switch) cannot maintain the ±1°C temperature precision required for
+            quality espresso. The embedded system replaces mechanical control with <strong>digital
+                intelligence</strong>, enabling:</p>
+        <ul>
+            <li>Mathematical control algorithms (PID) running at 100Hz.</li>
+            <li>Volumetric dispensing accurate to ±1ml.</li>
+            <li>User-programmable settings stored in non-volatile memory.</li>
+            <li>Safety monitoring with sub-millisecond response times.</li>
+        </ul>
+
+        <!-- System Overview Diagram -->
+        <div class="fig-box" style="padding: 15px; margin-top: 25px;">
+            <svg width="400" height="90" viewBox="0 0 400 90">
+                <!-- Sensor Box -->
+                <rect x="5" y="20" width="70" height="40" rx="4" fill="#27ae60" />
+                <text x="40" y="38" text-anchor="middle" fill="white" font-weight="bold" font-size="10">SENSORS</text>
+                <text x="40" y="52" text-anchor="middle" fill="white" font-size="7">ADC, INT</text>
+
+                <!-- MCU Box -->
+                <rect x="110" y="10" width="80" height="55" rx="4" fill="#002147" stroke="#C5A017" stroke-width="1.5" />
+                <text x="150" y="32" text-anchor="middle" fill="white" font-weight="bold" font-size="11">MCU</text>
+                <text x="150" y="45" text-anchor="middle" fill="#ccc" font-size="8">FSM + PID</text>
+                <text x="150" y="58" text-anchor="middle" fill="#ccc" font-size="7">ATmega328P</text>
+
+                <!-- Actuator Box -->
+                <rect x="225" y="20" width="70" height="40" rx="4" fill="#c0392b" />
+                <text x="260" y="38" text-anchor="middle" fill="white" font-weight="bold" font-size="9">ACTUATORS</text>
+                <text x="260" y="52" text-anchor="middle" fill="white" font-size="7">PWM, GPIO</text>
+
+                <!-- Plant Box -->
+                <rect x="330" y="20" width="60" height="40" rx="4" fill="#8e44ad" />
+                <text x="360" y="38" text-anchor="middle" fill="white" font-weight="bold" font-size="9">PLANT</text>
+                <text x="360" y="52" text-anchor="middle" fill="white" font-size="7">Coffee</text>
+
+                <!-- Arrows -->
+                <line x1="75" y1="40" x2="105" y2="40" stroke="#333" stroke-width="2" marker-end="url(#arr)" />
+                <line x1="190" y1="40" x2="220" y2="40" stroke="#333" stroke-width="2" marker-end="url(#arr)" />
+                <line x1="295" y1="40" x2="325" y2="40" stroke="#333" stroke-width="2" marker-end="url(#arr)" />
+
+                <!-- Feedback -->
+                <path d="M 360 60 L 360 80 L 40 80 L 40 60" fill="none" stroke="#666" stroke-width="1"
+                    stroke-dasharray="3,2" marker-end="url(#arr)" />
+                <text x="200" y="78" text-anchor="middle" font-size="7" fill="#666">Feedback Loop</text>
+
+                <defs>
+                    <marker id="arr" markerWidth="6" markerHeight="5" refX="5" refY="2.5" orient="auto">
+                        <polygon points="0 0, 6 2.5, 0 5" fill="#333" />
+                    </marker>
+                </defs>
+            </svg>
+            <div class="caption">Figure 2.1: Closed-Loop Embedded System Architecture</div>
+        </div>
+        <div class="page-num">Page 4</div>
+    </div>
+
+    <!-- PAGE 5: MCU ARCHITECTURE -->
+    <div class="page">
+        <h2>3. The Embedded System Architecture</h2>
+        <h3>3.1 Microcontroller Selection</h3>
+        <p>The MCU is the brain of the coffee maker. Selection criteria:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Requirement</th>
+                    <th>ATmega328P</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Architecture</td>
+                    <td>8-bit sufficient</td>
+                    <td>8-bit AVR RISC</td>
+                </tr>
+                <tr>
+                    <td>Clock Speed</td>
+                    <td>≥8 MHz</td>
+                    <td>16 MHz</td>
+                </tr>
+                <tr>
+                    <td>Flash Memory</td>
+                    <td>≥16 KB</td>
+                    <td>32 KB</td>
+                </tr>
+                <tr>
+                    <td>ADC</td>
+                    <td>10-bit</td>
+                    <td>10-bit, 8 ch</td>
+                </tr>
+                <tr>
+                    <td>Timers</td>
+                    <td>≥2</td>
+                    <td>3 timers</td>
+                </tr>
+                <tr>
+                    <td>Cost</td>
+                    <td>&lt;$3</td>
+                    <td>~$1.50</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="fig-box">
+            <svg width="500" height="180" viewBox="0 0 500 180">
+                <rect x="150" y="20" width="200" height="120" rx="10" fill="#002147" />
+                <text x="250" y="60" text-anchor="middle" fill="white" font-weight="bold"
+                    font-size="14">MICROCONTROLLER</text>
+                <text x="250" y="80" text-anchor="middle" fill="#ccc" font-size="10">ATmega328P @ 16MHz</text>
+                <text x="250" y="100" text-anchor="middle" fill="#ccc" font-size="9">32KB Flash | 2KB SRAM</text>
+                <rect x="20" y="40" width="100" height="25" rx="5" fill="#fff" stroke="#333" />
+                <text x="70" y="57" text-anchor="middle" font-size="9">Thermistor (ADC)</text>
+                <rect x="20" y="80" width="100" height="25" rx="5" fill="#fff" stroke="#333" />
+                <text x="70" y="97" text-anchor="middle" font-size="9">Flow Meter (INT0)</text>
+                <rect x="380" y="40" width="100" height="25" rx="5" fill="#fff" stroke="#c0392b" />
+                <text x="430" y="57" text-anchor="middle" font-size="9" fill="#c0392b">Heater (PWM)</text>
+                <rect x="380" y="80" width="100" height="25" rx="5" fill="#fff" stroke="#2980b9" />
+                <text x="430" y="97" text-anchor="middle" font-size="9" fill="#2980b9">Pump (GPIO)</text>
+                <line x1="120" y1="52" x2="150" y2="60" stroke="#333" stroke-width="2" />
+                <line x1="120" y1="92" x2="150" y2="100" stroke="#333" stroke-width="2" />
+                <line x1="350" y1="60" x2="380" y2="52" stroke="#c0392b" stroke-width="2" />
+                <line x1="350" y1="100" x2="380" y2="92" stroke="#2980b9" stroke-width="2" />
+            </svg>
+            <div class="caption">Figure 3.1: MCU Block Diagram showing I/O mapping.</div>
+        </div>
+        <div class="page-num">Page 5</div>
+    </div>
+
+    <!-- PAGE 6: MEMORY & PERIPHERALS -->
+    <div class="page">
+        <h3>3.2 Memory Organization</h3>
+        <div class="fig-box">
+            <svg width="400" height="120" viewBox="0 0 400 120">
+                <rect x="20" y="15" width="100" height="90" rx="5" fill="#3498db" />
+                <text x="70" y="45" text-anchor="middle" fill="white" font-weight="bold">FLASH</text>
+                <text x="70" y="65" text-anchor="middle" fill="white" font-size="10">32 KB</text>
+                <text x="70" y="85" text-anchor="middle" fill="white" font-size="9">Firmware Code</text>
+                <rect x="150" y="15" width="100" height="90" rx="5" fill="#e74c3c" />
+                <text x="200" y="45" text-anchor="middle" fill="white" font-weight="bold">SRAM</text>
+                <text x="200" y="65" text-anchor="middle" fill="white" font-size="10">2 KB</text>
+                <text x="200" y="85" text-anchor="middle" fill="white" font-size="9">Variables</text>
+                <rect x="280" y="15" width="100" height="90" rx="5" fill="#27ae60" />
+                <text x="330" y="45" text-anchor="middle" fill="white" font-weight="bold">EEPROM</text>
+                <text x="330" y="65" text-anchor="middle" fill="white" font-size="10">1 KB</text>
+                <text x="330" y="85" text-anchor="middle" fill="white" font-size="9">User Settings</text>
+            </svg>
+            <div class="caption">Figure 3.2: Memory Map of the Embedded System.</div>
+        </div>
+        <h3>3.3 Peripheral Interfaces</h3>
+        <ul>
+            <li><strong>ADC:</strong> Reads thermistor voltage. 10-bit resolution provides ~0.3°C precision.</li>
+            <li><strong>GPIO:</strong> Controls relays (OUTPUT) and reads buttons (INPUT_PULLUP).</li>
+            <li><strong>Timer0:</strong> Generates 1ms system tick for timing operations.</li>
+            <li><strong>Timer1:</strong> Generates PWM for heater duty cycle control.</li>
+            <li><strong>INT0:</strong> Captures flow meter pulses via hardware interrupt.</li>
+        </ul>
+        <div class="page-num">Page 6</div>
+    </div>
+
+    <!-- PAGE 6: FIRMWARE FSM -->
+    <div class="page">
+        <h2>4. Firmware Design</h2>
+        <h3>4.1 Finite State Machine (FSM)</h3>
+        <p>The core logic is implemented as a state machine ensuring predictable behavior:</p>
+        <div class="fig-box">
+            <svg width="520" height="180" viewBox="0 0 520 180">
+                <circle cx="70" cy="80" r="40" fill="#eee" stroke="#333" stroke-width="2" />
+                <text x="70" y="75" text-anchor="middle" font-weight="bold">INIT</text>
+                <text x="70" y="90" text-anchor="middle" font-size="9">Self-Test</text>
+                <circle cx="180" cy="80" r="40" fill="#e6f3ff" stroke="#002147" stroke-width="2" />
+                <text x="180" y="75" text-anchor="middle" font-weight="bold">IDLE</text>
+                <text x="180" y="90" text-anchor="middle" font-size="9">PID Active</text>
+                <circle cx="290" cy="80" r="40" fill="#d5f5e3" stroke="#27ae60" stroke-width="2" />
+                <text x="290" y="75" text-anchor="middle" font-weight="bold">BREW</text>
+                <text x="290" y="90" text-anchor="middle" font-size="9">Pump ON</text>
+                <circle cx="400" cy="80" r="40" fill="#fadbd8" stroke="#c0392b" stroke-width="2" />
+                <text x="400" y="75" text-anchor="middle" font-weight="bold">ERROR</text>
+                <text x="400" y="90" text-anchor="middle" font-size="9">Lockout</text>
+                <line x1="110" y1="80" x2="130" y2="80" stroke="#333" stroke-width="2" />
+                <line x1="220" y1="80" x2="240" y2="80" stroke="#333" stroke-width="2" />
+                <path d="M 290 120 Q 230 150 180 120" fill="none" stroke="#333" stroke-dasharray="4,2" />
+                <text x="235" y="145" font-size="8">Done</text>
+            </svg>
+            <div class="caption">Figure 4.1: Firmware State Machine Diagram.</div>
+        </div>
+        <div class="code">enum State { INIT, IDLE, BREW, ERROR };
+            State currentState = INIT;
+
+            void runFSM() {
+            switch(currentState) {
+            case INIT:
+            if (selfTestPassed()) currentState = IDLE;
+            else currentState = ERROR;
+            break;
+            case IDLE:
+            runPID();
+            if (brewButtonPressed()) currentState = BREW;
+            break;
+            case BREW:
+            runPID();
+            runPump();
+            if (targetVolumeReached()) currentState = IDLE;
+            break;
+            case ERROR:
+            disableAllOutputs();
+            break;
+            }
+            }</div>
+        <div class="page-num">Page 7</div>
+    </div>
+
+    <!-- PAGE 7: INTERRUPTS -->
+    <div class="page">
+        <h3>4.2 Interrupt Handling</h3>
+        <p>Interrupts allow immediate response to events without polling:</p>
+        <div class="code">volatile uint16_t pulseCount = 0;
+
+            // Interrupt Service Routine - triggered on rising edge
+            ISR(INT0_vect) {
+            pulseCount++; // Atomic increment
+            }
+
+            // In main loop: read and reset safely
+            uint16_t getPulses() {
+            cli(); // Disable interrupts
+            uint16_t count = pulseCount;
+            pulseCount = 0;
+            sei(); // Re-enable interrupts
+            return count;
+            }</div>
+        <h3>4.3 Timer Management</h3>
+        <ul>
+            <li><strong>Timer0:</strong> 1ms overflow for millis() counter</li>
+            <li><strong>Timer1:</strong> PWM output for heater control (0-100%)</li>
+        </ul>
+        <div class="eq-box">
+            $$ \text{Duty Cycle} = \frac{\text{OCR1A}}{255} \times 100\% $$
+        </div>
+        <div class="page-num">Page 8</div>
+    </div>
+
+    <!-- PAGE 8: PID CONTROL -->
+    <div class="page">
+        <h2>5. Control Algorithms</h2>
+        <h3>5.1 PID Temperature Control</h3>
+        <p>The PID controller calculates heater power to maintain 93°C:</p>
+        <div class="eq-box">
+            $$ u(t) = K_p \cdot e(t) + K_i \int_0^t e(\tau) d\tau + K_d \frac{de(t)}{dt} $$
+        </div>
+        <div class="code">float Kp = 15.0, Ki = 0.5, Kd = 5.0;
+            float integral = 0, prevError = 0;
+
+            float computePID(float setpoint, float measured) {
+            float error = setpoint - measured;
+            float P = Kp * error;
+            integral += error * dt;
+            integral = constrain(integral, -100, 100);
+            float I = Ki * integral;
+            float D = Kd * (error - prevError) / dt;
+            prevError = error;
+            return constrain(P + I + D, 0, 100);
+            }</div>
+        <div class="fig-box">
+            <svg width="400" height="120" viewBox="0 0 400 120">
+                <line x1="40" y1="100" x2="380" y2="100" stroke="#333" stroke-width="2" />
+                <line x1="40" y1="100" x2="40" y2="20" stroke="#333" stroke-width="2" />
+                <line x1="40" y1="40" x2="380" y2="40" stroke="#c0392b" stroke-dasharray="5,5" />
+                <text x="360" y="35" font-size="9" fill="#c0392b">93°C</text>
+                <path d="M 40 100 Q 100 100, 150 50 T 250 42 L 380 40" fill="none" stroke="#2980b9" stroke-width="3" />
+                <text x="200" y="115" text-anchor="middle" font-size="9">Time</text>
+            </svg>
+            <div class="caption">Figure 5.1: PID Response - smooth approach without overshoot.</div>
+        </div>
+        <div class="page-num">Page 9</div>
+    </div>
+
+    <!-- PAGE 9: I/O -->
+    <div class="page">
+        <h3>5.2 Volumetric Dispensing</h3>
+        <div class="code">const float PULSES_PER_ML = 0.45;
+
+            void brewCoffee(uint16_t targetMl) {
+            uint16_t targetPulses = targetMl * PULSES_PER_ML;
+            pulseCount = 0;
+            startPump();
+
+            while (pulseCount < targetPulses) { runPID(); if (millis() - start> TIMEOUT) break;
+                }
+
+                stopPump();
+                }</div>
+        <div class="page-num">Page 10</div>
+    </div>
+
+    <!-- PAGE 11: I/O INTERFACING -->
+    <div class="page">
+        <h2>6. I/O Interfacing</h2>
+        <h3>6.1 Analog Input (ADC)</h3>
+        <p>The thermistor forms a voltage divider. The ADC converts the analog voltage to a digital value:</p>
+        <div class="eq-box">
+            $$ V_{out} = V_{cc} \times \frac{R_{ntc}}{R_{ntc} + R_{fixed}} $$
+        </div>
+        <p>The 10-bit ADC provides 1024 discrete levels. Temperature is calculated using the Steinhart-Hart equation
+            stored in firmware.</p>
+
+        <h3>6.2 Digital Output (GPIO/PWM)</h3>
+        <p>High-power loads (heater, pump) require galvanic isolation to protect the MCU from mains voltage:</p>
+        <div class="fig-box">
+            <svg width="350" height="100" viewBox="0 0 350 100">
+                <rect x="20" y="25" width="70" height="50" rx="5" fill="#002147" />
+                <text x="55" y="55" text-anchor="middle" fill="white" font-size="10">MCU</text>
+                <rect x="120" y="15" width="100" height="70" rx="5" fill="#fff" stroke="#333" stroke-width="2" />
+                <text x="170" y="45" text-anchor="middle" font-size="10">OPTOCOUPLER</text>
+                <text x="170" y="65" text-anchor="middle" font-size="9">Galvanic Isolation</text>
+                <rect x="250" y="25" width="80" height="50" rx="5" fill="#c0392b" />
+                <text x="290" y="45" text-anchor="middle" fill="white" font-size="10">TRIAC</text>
+                <text x="290" y="60" text-anchor="middle" fill="white" font-size="9">220V AC</text>
+                <line x1="90" y1="50" x2="120" y2="50" stroke="#333" stroke-width="2" />
+                <line x1="220" y1="50" x2="250" y2="50" stroke="#333" stroke-width="2" />
+            </svg>
+            <div class="caption">Figure 6.1: Isolation between MCU (5V) and Mains (220V).</div>
+        </div>
+        <div class="page-num">Page 11</div>
+    </div>
+
+    <!-- PAGE 12: REAL-TIME -->
+    <div class="page">
+        <h2>7. Real-Time Constraints</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Deadline</th>
+                    <th>Consequence</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Flow Meter ISR</td>
+                    <td>&lt;100 µs</td>
+                    <td>Volume error</td>
+                </tr>
+                <tr>
+                    <td>PID Loop</td>
+                    <td>100 ms</td>
+                    <td>Temp oscillation</td>
+                </tr>
+                <tr>
+                    <td>Watchdog Reset</td>
+                    <td>&lt;500 ms</td>
+                    <td>System reset</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>At 16 MHz, worst-case execution times:</p>
+        <ul>
+            <li>ADC Read: ~104 µs</li>
+            <li>PID Calculation: ~50 µs</li>
+            <li>State Machine: ~5 µs</li>
+            <li>Total Loop: ~200 µs (99.8% idle)</li>
+        </ul>
+        <div class="page-num">Page 12</div>
+    </div>
+
+    <!-- PAGE 11: SAFETY -->
+    <div class="page">
+        <h2>8. Safety & Watchdog Mechanisms</h2>
+        <h3>8.1 Software Watchdog Timer</h3>
+        <div class="code">void setupWatchdog() {
+            WDTCSR = (1 << WDCE) | (1 << WDE); WDTCSR=(1 << WDE) | (1 << WDP2) | (1 << WDP0); } void loop() {
+                wdt_reset(); // Must call every loop runFSM(); checkSafety(); }</div>
+                <h3>8.2 Safety Interlocks</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Condition</th>
+                            <th>Detection</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Sensor Disconnect</td>
+                            <td>ADC = 0 or 1023</td>
+                            <td>Disable heater</td>
+                        </tr>
+                        <tr>
+                            <td>Runaway Heating</td>
+                            <td>Temp > 130°C</td>
+                            <td>Cut power</td>
+                        </tr>
+                        <tr>
+                            <td>Dry Pump</td>
+                            <td>Flow = 0 for 30s</td>
+                            <td>Stop pump</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3>8.3 Hardware Failsafes</h3>
+                <ul>
+                    <li><strong>Thermal Fuse (142°C):</strong> Permanently breaks circuit if overheated.</li>
+                    <li><strong>Brown-Out Detection:</strong> Resets MCU if Vcc drops below 4.3V.</li>
+                </ul>
+                <div class="page-num">Page 13</div>
+        </div>
+
+        <!-- PAGE 12: CONCLUSION -->
+        <div class="page">
+            <h2>9. Conclusion</h2>
+            <p>This report analyzed the <strong>embedded system</strong> within a coffee maker, demonstrating how a
+                microcontroller orchestrates complex real-time control.</p>
+            <h3>Key Takeaways</h3>
+            <ul>
+                <li><strong>MCU is Central:</strong> All intelligence resides in firmware. Sensors/actuators are
+                    peripherals.</li>
+                <li><strong>FSM Design:</strong> Ensures predictable, safe state transitions.</li>
+                <li><strong>PID Control:</strong> Achieves ±1°C precision impossible with mechanical thermostats.</li>
+                <li><strong>Real-Time:</strong> All timing deadlines are met with margin to spare.</li>
+                <li><strong>Safety:</strong> Multi-layer protection (WDT, interlocks, thermal fuse).</li>
+            </ul>
+            <div class="callout">
+                <strong>Principles of Operation:</strong>
+                <p>1. <strong>Sense:</strong> ADC reads thermistor; INT0 counts flow pulses.</p>
+                <p>2. <strong>Process:</strong> FSM determines state; PID calculates heater power.</p>
+                <p>3. <strong>Actuate:</strong> PWM drives heater; GPIO controls pump via isolated drivers.</p>
+                <p>4. <strong>Repeat:</strong> 10 Hz control loop maintains system stability.</p>
+            </div>
+            <div class="page-num">Page 14</div>
+        </div>
+
+        <!-- PAGE 13: REFERENCES -->
+        <div class="page">
+            <h2>10. References</h2>
+            <ol style="font-size: 10pt; line-height: 1.6;">
+                <li>Barr, M. (2006). <em>Programming Embedded Systems in C and C++</em>. O'Reilly Media.</li>
+                <li>Heath, S. (2003). <em>Embedded Systems Design</em> (2nd ed.). Newnes.</li>
+                <li>Åström, K. J., & Murray, R. M. (2021). <em>Feedback Systems: An Introduction for Scientists and
+                        Engineers</em> (2nd ed.). Princeton University Press.</li>
+                <li>Atmel Corporation. (2015). <em>ATmega328P Datasheet</em>. Microchip Technology Inc.</li>
+                <li>White, E. (2011). <em>Making Embedded Systems: Design Patterns for Great Software</em>. O'Reilly
+                    Media.</li>
+                <li>Mazidi, M. A., Naimi, S., & Naimi, S. (2017). <em>The AVR Microcontroller and Embedded Systems</em>
+                    (2nd ed.). Pearson.</li>
+                <li>Seborg, D. E., Edgar, T. F., & Mellichamp, D. A. (2016). <em>Process Dynamics and Control</em> (4th
+                    ed.). Wiley.</li>
+                <li>Lee, E. A., & Seshia, S. A. (2017). <em>Introduction to Embedded Systems: A Cyber-Physical Systems
+                        Approach</em> (2nd ed.). MIT Press.</li>
+                <li>Ganssle, J. (2008). <em>The Firmware Handbook</em>. Newnes.</li>
+                <li>Franklin, G. F., Powell, J. D., & Emami-Naeini, A. (2015). <em>Feedback Control of Dynamic
+                        Systems</em> (7th ed.). Pearson.</li>
+            </ol>
+
+            <h3 style="margin-top: 25px;">Online Resources</h3>
+            <ol start="11" style="font-size: 10pt; line-height: 1.6;">
+                <li>Arduino Foundation. (2024). Arduino Reference Documentation. https://www.arduino.cc/reference/</li>
+                <li>Microchip Technology. (2024). AVR Libc Reference Manual. https://www.nongnu.org/avr-libc/</li>
+                <li>Texas Instruments. (2018). <em>PID Control for Embedded Systems</em>. Application Note SLAA574.</li>
+            </ol>
+
+            <div
+                style="margin-top: 40px; text-align: center; color: #888; font-size: 9pt; border-top: 1px solid #ddd; padding-top: 20px;">
+                <strong>End of Report</strong><br>
+                Air Force Institute of Technology<br>
+                Department of Mechatronics Engineering<br>
+                Academic Session 2025/2026
+            </div>
+            <div class="page-num">Page 15</div>
+        </div>
+
+</body>
+
+</html>
