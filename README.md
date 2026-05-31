@@ -62,21 +62,6 @@ The HTML document supports on-screen viewing and clean **A4 printing**, with dia
 2. Open `report.html` in any modern browser
 3. (Optional) Print to PDF using A4 settings for best layout
 
----
-
-## Publish on GitHub Pages
-
-1. Go to **Settings** → **Pages** in this repository.
-2. Under **Build and deployment**, choose **Deploy from a branch**.
-3. Select branch **main** and folder **/(root)**, then click **Save**.
-4. After deployment, open:
-   * `https://abubakar-xyz.github.io/HTML-Style-Report-on-Embedded-Systems/` (clean URL)
-   * `https://abubakar-xyz.github.io/HTML-Style-Report-on-Embedded-Systems/report.html` (direct report URL)
-5. For forks, use the same pattern:
-   * `https://<username>.github.io/<repository-name>/`
-
----
-
 ## Academic Context
 
 * **Course:** MCT 425 – Embedded Systems
