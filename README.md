@@ -72,6 +72,8 @@ The HTML document supports on-screen viewing and clean **A4 printing**, with dia
 4. After deployment, open:
    * `https://abubakar-xyz.github.io/HTML-Style-Report-on-Embedded-Systems/` (clean URL)
    * `https://abubakar-xyz.github.io/HTML-Style-Report-on-Embedded-Systems/report.html` (direct report URL)
+5. For forks, use the same pattern:
+   * `https://<username>.github.io/<repository-name>/`
 
 ---
 
